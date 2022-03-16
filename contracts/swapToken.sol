@@ -5,11 +5,6 @@ import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import {IERC20} from "./IERC20.sol";
 
 contract swapToken {
-    uint8 ethDecimal;
-    uint8 maticDecimal;
-    int256 MaticPrice;
-    int256 EthPrice;
-
     AggregatorV3Interface internal maticPriceFeed;
     AggregatorV3Interface internal ethPriceFeed;
 
@@ -22,17 +17,16 @@ contract swapToken {
         );
     }
 
-    function getLatestPriceMatic() public {
-        (, int256 priceMatic, , , ) = maticPriceFeed.latestRoundData();
-        maticDecimal = maticPriceFeed.decimals();
-        MaticPrice = priceMatic;
+    function getLatestPriceMatic() public view returns (int256, uint8) {
+        (, int256 price, , , ) = maticPriceFeed.latestRoundData();
+        uint8 decimal = maticPriceFeed.decimals();
+        return (price, decimal);
     }
 
-    function getLatestPriceEth() public {
-        (, int256 priceEth, , , ) = ethPriceFeed.latestRoundData();
-
-        ethDecimal = ethPriceFeed.decimals();
-        EthPrice = priceEth;
+    function getLatestPriceEth() public view returns (int256, uint8) {
+        (, int256 price, , , ) = ethPriceFeed.latestRoundData();
+        uint8 decimal = ethPriceFeed.decimals();
+        return (price, decimal);
     }
 
     function swapMaticToEth(
@@ -40,7 +34,8 @@ contract swapToken {
         address _toToken,
         uint256 _amountIn
     ) public returns (bool) {
-        uint256 rate = uint256(MaticPrice) / maticDecimal;
+        (int256 price, uint8 decimal) = getLatestPriceMatic();
+        uint256 rate = uint256(price) / decimal;
         uint256 exchange = _amountIn * rate;
         require(
             IERC20(_toToken).balanceOf(address(this)) >= exchange,
@@ -69,7 +64,8 @@ contract swapToken {
         address _toToken,
         uint256 _amountIn
     ) public returns (bool) {
-        uint256 rate = uint256(EthPrice) / ethDecimal;
+        (int256 price, uint8 decimal) = getLatestPriceEth();
+        uint256 rate = uint256(price) / decimal;
         uint256 exchange = _amountIn * rate;
         require(
             IERC20(_toToken).balanceOf(address(this)) >= exchange,
