@@ -22,20 +22,17 @@ contract swapToken {
         );
     }
 
-    function getLatestPrice() public {
-        (
-            ,
-            int256 priceMatic, // int256 priceEth, /*uint80 roundID*/ /*uint startedAt*/
-            ,
-            ,
-
-        ) = maticPriceFeed.latestRoundData();
-        // ethPriceFeed.latestRoundData();
+    function getLatestPriceMatic() public {
+        (, int256 priceMatic, , , ) = maticPriceFeed.latestRoundData();
         maticDecimal = maticPriceFeed.decimals();
-        // ethDecimal = ethPriceFeed.decimals();
-
         MaticPrice = priceMatic;
-        // EthPrice = priceEth.touint256();
+    }
+
+    function getLatestPriceEth() public {
+        (, int256 priceEth, , , ) = ethPriceFeed.latestRoundData();
+
+        ethDecimal = ethPriceFeed.decimals();
+        EthPrice = priceEth;
     }
 
     function swapMaticToEth(
