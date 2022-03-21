@@ -1,3 +1,6 @@
+import "@typechain/hardhat";
+import "@nomiclabs/hardhat-ethers";
+import "@nomiclabs/hardhat-waffle";
 require("@nomiclabs/hardhat-waffle");
 require("dotenv").config({ path: ".env" });
 
@@ -8,10 +11,8 @@ const MUMBAI_PRIVATE_KEY = process.env.MUMBAI_PRIVATE_KEY;
 module.exports = {
   solidity: "0.8.7",
   networks: {
-    forking: {
-      url: MORALIS_API_KEY_URL,
-    },
     mumbai: {
+      url: MORALIS_API_KEY_URL,
       accounts: [MUMBAI_PRIVATE_KEY],
     },
   },

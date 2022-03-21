@@ -1,12 +1,12 @@
-import { ethers, network } from "hardhat";
-
-const USDTHolder = "0xf7b2f3cd946052f8b397f801299b80f053515af9";
-const MATICHolder = ;
+import "@nomiclabs/hardhat-ethers";
+import { ethers } from "hardhat";
 
 async function swap() {
   const contract = await ethers.getContractFactory("swapToken");
   const contractDeploy = await contract.deploy();
   await contractDeploy.deployed();
+
+  console.log("Contract Deploy at", contractDeploy.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
