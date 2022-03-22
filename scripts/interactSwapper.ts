@@ -4,78 +4,108 @@ import "@nomiclabs/hardhat-waffle";
 import { ethers } from "hardhat";
 
 async function interactSwap() {
-  const swapperAddress: string = "0xb334795bf50e4943d076Dfb38D8C1A50F9F5a101";
-  const chainLinkHolder: string = "0x59eCf48345A221E0731E785ED79eD40d0A94E2A5";
-  const USDCHolder: string = "0x21Cb017B40abE17B6DFb9Ba64A3Ab0f24A7e60EA";
-  // Contract addresses
-  const USDCAddress: string = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
-  const LinkAddress: string = "0x53E0bca35eC356BD5ddDFebbD1Fc0fD03FaBad39";
+  ////////////////////////
+  // Deployed contract address
+  const swapperAddress: string = "0x8aA3AE13495fc5CAc14D8f1b849520797168996e";
+  //////////////////////
+  // Holders account to impersonate
+  const aaveHolder: string = "0x6A7c6689b24515bc9983360Dfb8E6Ed7891ac7Cf";
+  const chainLinkHolder: string = "0x10d26032e448aed045e0628929ea2b6068aa7b5f";
 
+  //// Contract addresses
+  const LinkAddress: string = "0x53E0bca35eC356BD5ddDFebbD1Fc0fD03FaBad39";
+  const aaveAddress: string = "0xD6DF932A45C0f255f85145f286eA0b292B21C90B";
+  //////////////////////////////////
+  /// Price Checker Address: Chainlink price feed
+  const aavePrice: string = "0x72484B12719E23115761D5DA1646945632979bB6";
+  const LinkPrice: string = "0xd9FFdb71EbE7496cC440152d43986Aae0AB76665";
+
+  ///////////////////////
   const contract = await ethers.getContractAt("swapToken", swapperAddress);
 
-  await contract.getLatestPriceA();
-  await contract.getLatestPriceB();
-  console.log(await contract.priceTokenAUSDC());
-  console.log(await contract.priceTokenBLink());
+  console.log(await contract.getLatestPrice(aavePrice, LinkPrice));
 
-  /////////////////////////////////////////////
+  ///////////////////////////////////
+  // Impersonation function
+  async function prank(address: string) {
+    // @ts-ignore
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [address],
+    });
+  }
+
+  //   ///////////////////////////////////////
   // Link Impersonation
-  //@ts-ignore
-  await hre.network.provider.request({
-    method: "hardhat_impersonateAccount",
-    params: [chainLinkHolder],
-  });
+  prank(chainLinkHolder);
+  const signerLink = await ethers.getSigner(chainLinkHolder);
+  prank(aaveHolder);
+  const signerAave = await ethers.getSigner(aaveHolder);
 
-  const signer = await ethers.getSigner(chainLinkHolder);
-  //   console.log("impersonation success");
-
-  const approveLink = await ethers.getContractAt("IERC20", LinkAddress);
-  await approveLink.connect(signer);
-  //     .transfer(swapperAddress, "500000000000000000");
+  //   ///////////////////////////////////////
+  // Interacting with Link Token
+  const getLink = await ethers.getContractAt("IERC20", LinkAddress);
+  //   await getLink
+  //     .connect(signerLink)
+  //     .transfer(swapperAddress, "10000000000000000000");
   //   console.log("successfully transfer Link to the contract");
+  //   const LinkContractBal = await getLink.balanceOf(swapperAddress);
+  //   console.log(
+  //     "Balance of Link Token:",
+  //     Math.floor(Number(LinkContractBal) / Math.pow(10, 18))
+  //   );
+  //   //   ///////////////////////////////////////////////
+  //   // Interacting with Aave
+  const getAave = await ethers.getContractAt("IERC20", aaveAddress);
+  //   await getAave
+  //     .connect(signerAave)
+  //     .transfer(swapperAddress, "10000000000000000000");
+  //   console.log("successfully transfer Matic to the contract");
+  //   const aaveContractBal = await getAave.balanceOf(swapperAddress);
+  //   console.log(
+  //     "Balance of Aave Token:",
+  //     Math.floor(Number(aaveContractBal) / Math.pow(10, 18))
+  //   );
 
-  const LinkBal = await approveLink.balanceOf(swapperAddress);
-  console.log("Balance of Link Token:", LinkBal);
+  //   console.log("Balance of Aave Token:", aaveContractBal);
 
-  //////////////////////////////////////
-  // USDC Impersonation
-  //@ts-ignore
-  await hre.network.provider.request({
-    method: "hardhat_impersonateAccount",
-    params: [USDCHolder],
-  });
+  //   const LinkBal = await getLink.balanceOf(chainLinkHolder);
+  //   console.log("Balance of Link Token:", LinkBal);
+  //   console.log(Math.floor(Number(LinkBal) / Math.pow(10, 18)));
 
-  const signerUSDC = await ethers.getSigner(USDCHolder);
-  //   console.log("impersonation success");
-
-  const getUSDC = await ethers.getContractAt("IERC20", USDCAddress);
-  //   await getUSDC.connect(signerUSDC).transfer(swapperAddress, "100000000");
-  //   console.log("successfully transfer USDC to the contract");
-
-  const USDCBal = await getUSDC.balanceOf(swapperAddress);
-  console.log("Balance of USDC Token:", USDCBal);
-
-  ///////////////////////////////////////////////////
+  //   ///////////////////////////////////////////////////
   // SWAPPING
-  //   const oldBal = await approveLink.connect(signerUSDC).balanceOf(USDCHolder);
-  //   console.log("old balance of USDC holder LINK account:", oldBal);
-  //   //   await getUSDC.connect(signerUSDC).approve(swapperAddress, "200000000");
-  //   console.log(await getUSDC.allowance(USDCAddress, swapperAddress));
-  //   await contract.connect(signerUSDC).swapAUSDCtoBLink(USDCHolder, 1000);
+  const oldBal = await getAave.balanceOf(aaveHolder);
+  //
+  await getAave.connect(signerAave).allowance(aaveHolder, swapperAddress);
+  await getAave
+    .connect(signerAave)
+    .approve(swapperAddress, "5000000000000000000");
+  console.log("old balance of aave account:", oldBal);
+  await contract
+    .connect(signerAave)
+    .swapTokenAtoB(aaveHolder, 1, aaveAddress, LinkAddress, 18);
+  //   await getLink.allowance(chainLinkHolder, swapperAddress);
+  //   await contract.connect(signerLink).swapTokenAtoB(chainLinkHolder, 1000);
 
-  //   const newBal = await approveLink.connect(signerUSDC).balanceOf(USDCHolder);
-  //   console.log("balance after exchange of USDC to Link", newBal);
+  const newBal = await getAave.connect(signerAave).balanceOf(aaveHolder);
+  console.log("balance after exchange of Link to aave", newBal);
 
-  /////////////
-  // Swapping link to usdc
-  //   const oldBal = await approveLink.connect(signerUSDC).balanceOf(USDCHolder);
-  //   console.log("old balance of USDC holder LINK account:", oldBal);
-  //   await getUSDC.connect(signerUSDC).approve(swapperAddress, "200000000");
-  //   console.log(await getUSDC.allowance(USDCAddress, swapperAddress));
-  await contract.connect(signerUSDC).swapAUSDCtoBLink(USDCHolder, 1000);
+  //   /////////////
+  //   // Swapping link to usdc
+  //   console.log("old USDC bal", Math.floor(Number(USDCBal) / Math.pow(10, 6)));
+  //   console.log("old LINK bal", Math.floor(Number(LinkBal) / Math.pow(10, 18)));
 
-  const newBal = await approveLink.connect(signerUSDC).balanceOf(USDCHolder);
-  console.log("balance after exchange of USDC to Link", newBal);
+  //   await approveLink
+  //     .connect(signer)
+  //     .approve(swapperAddress, "2000000000000000000000");
+  //   console.log(await approveLink.allowance(LinkAddress, swapperAddress));
+  //   await contract
+  //     .connect(signerUSDC)
+  //     .swapAUSDCtoBLink(chainLinkHolder, "1000000");
+
+  //   console.log("New USDC bal", Math.floor(Number(USDCBal) / Math.pow(10, 6)));
+  //   console.log("New LINK bal", Math.floor(Number(LinkBal) / Math.pow(10, 18)));
 }
 
 // We recommend this pattern to be able to use async/await everywhere
