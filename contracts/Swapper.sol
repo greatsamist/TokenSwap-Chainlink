@@ -26,7 +26,7 @@ contract swapToken {
         return (priceTokenA, priceTokenB);
     }
 
-    /* To swwap, I need to divide the price of tokenA with tokenB 
+    /* To swap, I multipy tokenA with the chainlink priceFeed and divide with tokenB price 
 	and multiply by the decimal */
     function swapTokenAtoB(
         address _address,
@@ -54,7 +54,6 @@ contract swapToken {
         require(_amount < Balance, "reserve too low for exchange");
         uint256 rate = priceTokenA * amountDec;
         uint256 exchange = rate / priceTokenB;
-        // uint256 dec = rate * decimalsTokenAUSDC;
         // transfer the caller token A to the contract
         IERC20(_addressTokenA).transferFrom(_address, address(this), amountDec);
         // transfer the exact eqivalent token B to the caller
