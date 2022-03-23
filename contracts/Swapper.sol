@@ -14,28 +14,34 @@ contract swapToken {
     function getLatestPrice(address _TokenA, address _TokenB)
         public
         view
-        returns (uint256 priceTokenA, uint256 priceTokenB)
+        returns (uint256, uint256)
     {
         (, int256 PriceA, , , ) = AggregatorV3Interface(_TokenA)
             .latestRoundData();
         (, int256 PriceB, , , ) = AggregatorV3Interface(_TokenB)
             .latestRoundData();
 
-        priceTokenA = uint256(PriceA);
-        priceTokenB = uint256(PriceB);
+        uint256 priceTokenA = uint256(PriceA);
+        uint256 priceTokenB = uint256(PriceB);
+        return (priceTokenA, priceTokenB);
     }
 
-    /* To swwap, I need to divide the price of tokenA with tokenB and multiply by the decimal */
+    /* To swwap, I need to divide the price of tokenA with tokenB 
+	and multiply by the decimal */
     function swapTokenAtoB(
         address _address,
         uint256 _amount,
+        uint8 _decimals,
         address _addressTokenA,
         address _addressTokenB,
-        uint8 _decimals
+        address _priceTokenA,
+        address _priceTokenB
     ) public returns (bool success) {
+        /* calling getLatestPrice function and passing chainLink pricefeed 
+		address as parameter to get the rate of the token. */
         (uint256 priceTokenA, uint256 priceTokenB) = getLatestPrice(
-            _addressTokenA,
-            _addressTokenB
+            _priceTokenA,
+            _priceTokenB
         );
         require(
             _decimals > uint8(0) && _decimals <= uint8(18),
@@ -49,11 +55,29 @@ contract swapToken {
         uint256 rate = priceTokenA * amountDec;
         uint256 exchange = rate / priceTokenB;
         // uint256 dec = rate * decimalsTokenAUSDC;
+        // transfer the caller token A to the contract
         IERC20(_addressTokenA).transferFrom(_address, address(this), amountDec);
+        // transfer the exact eqivalent token B to the caller
         IERC20(_addressTokenB).transfer(_address, exchange);
         success = true;
     }
 
+    // addLiquidity add Tokens to contract for permissionless swap
+    function addLiquidity(
+        address _address,
+        address _tokenAddress,
+        uint256 amount
+    ) public returns (bool success) {
+        success = IERC20(_tokenAddress).transferFrom(
+            _address,
+            address(this),
+            amount
+        );
+
+        require(success != true, "transfer not successful");
+    }
+
+    /// Check Balance of a particular token in the contract
     function checkTokenBalance(address _tokenAddress)
         external
         view
