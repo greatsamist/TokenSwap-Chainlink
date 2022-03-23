@@ -26,8 +26,7 @@ contract swapToken {
         return (priceTokenA, priceTokenB);
     }
 
-    /* To swap, I multipy tokenA with the chainlink priceFeed and divide with tokenB price 
-	and multiply by the decimal */
+    /* To swap, I multipy _amount of tokenA with the chainlink priceFeed and divide with tokenB price */
     function swapTokenAtoB(
         address _address,
         uint256 _amount,
