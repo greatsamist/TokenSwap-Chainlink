@@ -11,14 +11,16 @@ yarn install
 ```
 ## How to Use the Project
 The project has four functions: </br> 
-- 1. The first function is to get the LatestPrice of the two tokens the user wants to swap, it accepts the address of token A and Token B which will be passed on to ChainLink price feed AggregatorV3. The AggregatorV3Interface has already been imported. </br>
+- 1. The first function is to get the latest price of the two tokens the user wants to swap, it accepts the address of token A and Token B which will be passed on to ChainLink price feed AggregatorV3. The AggregatorV3Interface has already been imported. </br>
 - 2. The second function is where the swap takes place, it accepts </br>a) the address of the caller, </br>b) the amount, </br>c) the decimals(most tokens are 18 decimals) </br>d) The contract address of Token A </br>e) The contract address of Token B. </br>f&g)The last two is the chainlink price feed address of Token A and Token B. </br></br>
-The first function (getLatestPrice) is called inside the second fn to get the price of the tokens needed for the exchange, this will return the price of each tokens which is now destructured 
+The first function (getLatestPrice) is called inside the second fn to get the price of the tokens needed for the exchange, this will return the price of each token which is now destructured 
 ```bash
 (uint256 priceTokenA, uint256 priceTokenB) = getLatestPrice(_priceTokenA, _priceTokenB);
 ```
-- 3. The Third function adds Liquidity to the contract vaults 
-- 
+- 3. The Third function adds Liquidity to the contract vault.
+- 4. The Fourth function checks the balance of a particular token in the contract vault.
+
+# Scripting
 ## Usage
 
 ```
